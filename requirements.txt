@@ -1,0 +1,9 @@
+fastapi[standard]
+passlib[bcrypt]
+sqlalchemy[asyncio]
+asyncpg
+psycopg[binary]
+dotenv
+alembic
+python-jose[cryptography]
+bcrypt==4.0.1
