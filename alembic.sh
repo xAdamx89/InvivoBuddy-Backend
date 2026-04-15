@@ -13,4 +13,3 @@ elif [ "$1" == "4" ]; then
     # Cofnięcie ostatniej zmiany
     alembic downgrade -1
 fi
- 

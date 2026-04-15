@@ -5,7 +5,14 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-DATABASE_URL = os.getenv("CONN_STR")
+DATABASE_URL_PROD = os.getenv("CONN_STR_PROD")
+DATABASE_URL_DEV = os.getenv("CONN_STR_DEV")
+
+# Wybór URL bazy danych na podstawie trybu działania
+if os.getenv("APP_MODE") == "PROD":
+    DATABASE_URL = DATABASE_URL_PROD
+else:
+    DATABASE_URL = DATABASE_URL_DEV
 
 engine = create_async_engine(DATABASE_URL, echo=True)
 
@@ -43,5 +50,6 @@ async def test_connection():
         await engine.dispose()
 
 if __name__ == "__main__":
+    print(DATABASE_URL)
     # Uruchomienie asynchronicznej funkcji testowej
     asyncio.run(test_connection())

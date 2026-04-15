@@ -6,7 +6,7 @@ class UserCreate(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     email: EmailStr | None = None
     password: str = Field(..., min_length=8)
-    avatar_url: str | None
+    avatar_url: str | None = None
 
 class UserLoginRequest(BaseModel):
     username: str
