@@ -1,5 +1,8 @@
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
+from models import Pomiary
+class GeneralResponse(BaseModel):
+    response: str
 
 # To wysyła Android przy rejestracji
 class UserCreate(BaseModel):
@@ -27,3 +30,7 @@ class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
+
+class WykonajPomiarRequest(BaseModel):
+    access_token: str
+    pomiar: Pomiary
