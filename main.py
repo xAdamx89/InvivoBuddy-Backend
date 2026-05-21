@@ -1,9 +1,12 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 import crud, schemas, database
 import security
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 app = FastAPI(title="InvivoBuddy API")
 
@@ -29,9 +32,10 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={"error": "Błędne dane wejściowe", "params": exc.errors()}
     )
 
+
 # Rejestracja użytkownika
-@app.post("/register", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)
-async def register_user(user: schemas.UserCreate, db: AsyncSession = Depends(database.get_db)):
+@app.post("/register", response_model=schemas.OdpowiedzOgolna, status_code=status.HTTP_201_CREATED)
+async def register_user(user: schemas.ZadanieRejestracja, db: AsyncSession = Depends(database.get_db)):
     # 1. Sprawdź czy user już istnieje (po username)
     existing_user = await crud.get_user_by_username(db, user.username)
     if existing_user:
@@ -44,8 +48,8 @@ async def register_user(user: schemas.UserCreate, db: AsyncSession = Depends(dat
     return await crud.create_user(db=db, user=user)
 
 # Endpoint do logowania się userów
-@app.post("/login", response_model=schemas.TokenResponse)
-async def login(login_data: schemas.UserLoginRequest, db: AsyncSession = Depends(database.get_db)):
+@app.post("/login", response_model=schemas.OdpowiedzToken)
+async def login(login_data: schemas.ZadanieUserLogin, db: AsyncSession = Depends(database.get_db)):
     # 1. Pobierz użytkownika z bazy
     user = await crud.get_user_by_username(db, login_data.username)
     
@@ -66,18 +70,33 @@ async def login(login_data: schemas.UserLoginRequest, db: AsyncSession = Depends
         "refresh_token": "temporary_refresh_token",
         "token_type": "bearer"
     }
+
+@app.get("/users/me", response_model=schemas.OdpowiedzJa)
+async def read_users_me(
+    pobierz_me: schemas.ZadanieJa,
+    db: AsyncSession = Depends(database.get_db),
+    current_user: schemas.OdpowiedzJa = Depends(crud.get_current_user)
+    ):
+    return current_user
+
+@app.post("/pomiary/pobierz", response_model=schemas.OdpowiedzListaPomiarow)
+async def pobierz_pomiary(
+    pobierz_pomiary: schemas.ZadanieListaPomiarow,
+    db: AsyncSession = Depends(database.get_db),
+    current_user: schemas.OdpowiedzJa = Depends(crud.get_current_user)
+    ):
     pass
 
-@app.post("/pomiary/pobierz", response_model=schemas.ListaPomiarowResponse)
-async def login(pomiary_data: schemas.ListaPomiarowResponse, db: AsyncSession = Depends(database.get_db)):
+@app.post("/pomiary/dodaj", response_model=schemas.OdpowiedzOgolna)
+async def dodaj_pomiar(
+    nowy_pomiar: schemas.ZadanieDodajPomiar,
+    db: AsyncSession = Depends(database.get_db),
+    current_user: schemas.OdpowiedzJa = Depends(crud.get_current_user)
+    ):
     pass
 
-@app.post("/pomiary/dodaj", response_model=schemas.GeneralResponse)
-async def login(response: schemas.UserLoginRequest, db: AsyncSession = Depends(database.get_db)):
-    pass
-
-@app.put("/pomiary/zmodyfikuj", response_model=schemas.GeneralResponse)
-async def login(login_data: schemas.UserLoginRequest, db: AsyncSession = Depends(database.get_db)):
+@app.put("/pomiary/zmodyfikuj", response_model=schemas.OdpowiedzZmodyfikujPomiar)
+async def zmodyfikuj_pomiar(response: schemas.ZadanieZmodyfikujPomiar, db: AsyncSession = Depends(database.get_db)):
     pass
 
 # Prosty testowy endpoint
