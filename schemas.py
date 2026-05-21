@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from datetime import datetime
 from models import Pomiary
 class GeneralResponse(BaseModel):
@@ -34,6 +34,8 @@ class TokenResponse(BaseModel):
 class WykonajPomiarRequest(BaseModel):
     access_token: str
     pomiar: Pomiary
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 class ZmodyfikujDaneResponse(BaseModel):
     pass
