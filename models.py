@@ -1,6 +1,6 @@
 from typing import List
-from sqlalchemy import String, DateTime, ForeignKey, func
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String, Integer, Boolean, DateTime, ForeignKey, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 from datetime import datetime
 from database import Base
 
@@ -59,21 +59,21 @@ class TabelePomiarowe(Base):
 
     # RELACJA: Lista wszystkich pomiarów przypisanych do tej tabeli
     pomiary: Mapped[List["Pomiary"]] = relationship(
-        back_populates="tabela_matka", 
+        "Pomiary",
+        back_populates="tabela_pomiaru", 
         cascade="all, delete-orphan" # Jeśli usuniesz tabelę, usuną się też pomiary
     )
-
+   
 class Pomiary(Base):
     __tablename__ = "pomiary"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
     # KLUCZ OBCY: Wskazuje na konkretny rekord w tabeli_pomiaru
-    id_tabeli_pomiaru: Mapped[int] = mapped_column(
+    tabela_pomiaru_id: Mapped[int] = mapped_column(
         ForeignKey("tabela_pomiaru.id"), nullable=False
     )
 
-    id_tabeli_pomiaru: Mapped[int] = mapped_column(nullable=False)
     data_pomiaru: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     temperatura: Mapped[float] = mapped_column(nullable=False)
     godzina_pomiaru: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
@@ -87,4 +87,9 @@ class Pomiary(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now()
+    )
+
+    tabela_pomiaru: Mapped["TabelePomiarowe"] = relationship(
+        "TabelePomiarowe",
+        back_populates="pomiary"
     )

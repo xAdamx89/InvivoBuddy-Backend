@@ -43,6 +43,7 @@ async def register_user(user: schemas.UserCreate, db: AsyncSession = Depends(dat
     # 2. Tworzenie użytkownika w bazie
     return await crud.create_user(db=db, user=user)
 
+# Endpoint do logowania się userów
 @app.post("/login", response_model=schemas.TokenResponse)
 async def login(login_data: schemas.UserLoginRequest, db: AsyncSession = Depends(database.get_db)):
     # 1. Pobierz użytkownika z bazy
@@ -65,6 +66,19 @@ async def login(login_data: schemas.UserLoginRequest, db: AsyncSession = Depends
         "refresh_token": "temporary_refresh_token",
         "token_type": "bearer"
     }
+    pass
+
+@app.post("/pomiary/pobierz", response_model=schemas.ListaPomiarowResponse)
+async def login(pomiary_data: schemas.ListaPomiarowResponse, db: AsyncSession = Depends(database.get_db)):
+    pass
+
+@app.post("/pomiary/dodaj", response_model=schemas.GeneralResponse)
+async def login(response: schemas.UserLoginRequest, db: AsyncSession = Depends(database.get_db)):
+    pass
+
+@app.put("/pomiary/zmodyfikuj", response_model=schemas.GeneralResponse)
+async def login(login_data: schemas.UserLoginRequest, db: AsyncSession = Depends(database.get_db)):
+    pass
 
 # Prosty testowy endpoint
 @app.get("/")

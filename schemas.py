@@ -34,3 +34,9 @@ class TokenResponse(BaseModel):
 class WykonajPomiarRequest(BaseModel):
     access_token: str
     pomiar: Pomiary
+
+class ZmodyfikujDaneResponse(BaseModel):
+    pass
+
+class ListaPomiarowResponse(BaseModel):
+    pass
