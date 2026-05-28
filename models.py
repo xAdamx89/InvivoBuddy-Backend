@@ -9,22 +9,18 @@ from models_enum import TypObjawuKrwi
 class User(Base):
     __tablename__ = "users"
 
-    # Mapped i mapped_column dają lepsze wsparcie dla podpowiadania składni (IDE)
     UserId: Mapped[int] = mapped_column(primary_key=True, index=True)
     username: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
     email: Mapped[str | None] = mapped_column(String(100), unique=True, index=True, nullable=True)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     avatar_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    
-    # server_default=func.now() sprawia, że to PostgreSQL wstawi datę
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), 
-        server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
+    # POPRAWKA: Czysta relacja dwukierunkowa
     tabele: Mapped[List["TabelePomiarowe"]] = relationship(
-        "TabelePomiarowe", 
-        primaryjoin="User.UserId == TabelePomiarowe.owner_id"
+        "TabelePomiarowe",
+        back_populates="owner",
+        cascade="all, delete-orphan"
     )
 
 class Poradnik(Base):
@@ -36,7 +32,7 @@ class Poradnik(Base):
     tresc: Mapped[str] = mapped_column(String(1000), nullable=False)
     
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), 
+        DateTime(timezone=True),
         server_default=func.now()
     )
 
@@ -45,12 +41,12 @@ class TabelePomiarowe(Base):
 
     TabelaPomiarowaId: Mapped[int] = mapped_column(primary_key=True, index=True)
 
-    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.UserId", ondelete="CASCADE"), nullable=False)
     user_id_udostepnione: Mapped[int | None] = mapped_column(nullable=True)
 
     imie_i_nazwisko: Mapped[str] = mapped_column(String(100), nullable=False)
     wiek: Mapped[int] = mapped_column(nullable=False)
-    godzina_pomiaru: Mapped[Time] = mapped_column(Time(timezone=True), nullable=False)
+    godzina_pomiaru: Mapped[Time] = mapped_column(Time, nullable=False)
     rok: Mapped[int] = mapped_column(nullable=False)
     numer_cyklu: Mapped[int] = mapped_column(nullable=False)
     pierwszy_dzien_miesiaczki: Mapped[int] = mapped_column(nullable=False)
@@ -61,16 +57,15 @@ class TabelePomiarowe(Base):
 
     
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), 
+        DateTime(timezone=True),
         server_default=func.now()
     )
 
-    # RELACJA: Lista wszystkich pomiarów przypisanych do tej tabeli
+    # RELACJE
+    owner: Mapped["User"] = relationship("User", back_populates="tabele")
     pomiary: Mapped[List["Pomiary"]] = relationship(
-        "Pomiary",
-        back_populates="tabela_pomiaru", 
-        cascade="all, delete-orphan" # Jeśli usuniesz tabelę, usuną się też pomiary
-    )       
+        "Pomiary", back_populates="tabela_pomiaru", cascade="all, delete-orphan"
+    )
 class Pomiary(Base):
     __tablename__ = "pomiary"
 
@@ -83,7 +78,7 @@ class Pomiary(Base):
 
     data_pomiaru: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     temperatura: Mapped[float] = mapped_column(nullable=False)
-    godzina_pomiaru: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    godzina_pomiaru: Mapped[Time] = mapped_column(Time, nullable=False)
     informacje_dodatkowe: Mapped[str | None] = mapped_column(String(255), nullable=True)
     dzien_cyklu: Mapped[int] = mapped_column(nullable=False)
 
