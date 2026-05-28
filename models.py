@@ -1,14 +1,16 @@
 from typing import List
-from sqlalchemy import String, Integer, Boolean, DateTime, ForeignKey, func
+from sqlalchemy import String, Integer, Boolean, DateTime, ForeignKey, func, Time, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 from datetime import datetime
 from database import Base
+
+from models_enum import TypObjawuKrwi
 
 class User(Base):
     __tablename__ = "users"
 
     # Mapped i mapped_column dają lepsze wsparcie dla podpowiadania składni (IDE)
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    UserId: Mapped[int] = mapped_column(primary_key=True, index=True)
     username: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
     email: Mapped[str | None] = mapped_column(String(100), unique=True, index=True, nullable=True)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -20,13 +22,18 @@ class User(Base):
         server_default=func.now()
     )
 
-class poradnik(Base):
+    tabele: Mapped[List["TabelePomiarowe"]] = relationship(
+        "TabelePomiarowe", 
+        primaryjoin="User.UserId == TabelePomiarowe.owner_id"
+    )
+
+class Poradnik(Base):
     __tablename__ = "poradnik"
 
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    PoradnikId: Mapped[int] = mapped_column(primary_key=True, index=True)
     kategoria: Mapped[str] = mapped_column(String(50), nullable=False) # Obserwacje temperatury albo obserwacje śluz
     tytul: Mapped[str] = mapped_column(String(100), nullable=False)
-    tresc: Mapped[str] = mapped_column(String(255), nullable=False)
+    tresc: Mapped[str] = mapped_column(String(1000), nullable=False)
     
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
@@ -36,20 +43,21 @@ class poradnik(Base):
 class TabelePomiarowe(Base):
     __tablename__ = "tabela_pomiaru"
 
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    owner_id: Mapped[int] = mapped_column(nullable=False)
+    TabelaPomiarowaId: Mapped[int] = mapped_column(primary_key=True, index=True)
+
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     user_id_udostepnione: Mapped[int | None] = mapped_column(nullable=True)
-    # pomiar_id: Mapped[int] = mapped_column(nullable=False)
 
     imie_i_nazwisko: Mapped[str] = mapped_column(String(100), nullable=False)
     wiek: Mapped[int] = mapped_column(nullable=False)
-    godzina_pomiaru: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    godzina_pomiaru: Mapped[Time] = mapped_column(Time(timezone=True), nullable=False)
     rok: Mapped[int] = mapped_column(nullable=False)
     numer_cyklu: Mapped[int] = mapped_column(nullable=False)
     pierwszy_dzien_miesiaczki: Mapped[int] = mapped_column(nullable=False)
     dlugosc_cyklu: Mapped[int] = mapped_column(nullable=False)
     dlugosc_fazy_lutealnej: Mapped[int] = mapped_column(nullable=False)
     informacje_dodatkowe: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    koniec_cyklu: Mapped[bool] = mapped_column(nullable=False)
 
     
     created_at: Mapped[datetime] = mapped_column(
@@ -62,16 +70,15 @@ class TabelePomiarowe(Base):
         "Pomiary",
         back_populates="tabela_pomiaru", 
         cascade="all, delete-orphan" # Jeśli usuniesz tabelę, usuną się też pomiary
-    )
-   
+    )       
 class Pomiary(Base):
     __tablename__ = "pomiary"
 
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    PomiarId: Mapped[int] = mapped_column(primary_key=True, index=True)
 
     # KLUCZ OBCY: Wskazuje na konkretny rekord w tabeli_pomiaru
     tabela_pomiaru_id: Mapped[int] = mapped_column(
-        ForeignKey("tabela_pomiaru.id"), nullable=False
+        ForeignKey("tabela_pomiaru.TabelaPomiarowaId"), nullable=False
     )
 
     data_pomiaru: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
@@ -82,7 +89,7 @@ class Pomiary(Base):
 
     przyjmowanie_progesteronu: Mapped[bool] = mapped_column(nullable=False)
     
-    krwawienie_plamienie_brudzenie: Mapped[str] = mapped_column(String(1), nullable=False)
+    krwawienie_plamienie_brudzenie: Mapped[TypObjawuKrwi] = mapped_column(Enum(TypObjawuKrwi), nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

@@ -76,3 +76,20 @@ async def create_user(db: AsyncSession, user: schemas.ZadanieRejestracja):
     await db.commit()
     await db.refresh(db_user)
     return db_user
+
+
+async def dodaj_pomiar(db: AsyncSession, pomiar_data: schemas.ZadanieDodajPomiar, user_id: int):
+    # Tworzymy obiekt modelu SQLAlchemy na podstawie danych ze schematu Pydantic
+    db_pomiar = models.Pomiar(
+        user_id=user_id, # Pobieramy bezpiecznie z zalogowanego użytkownika
+        godzina_pomiaru=pomiar_data.godzina_pomiaru,
+        okres=pomiar_data.okres,
+        informacje_dodatkowe=pomiar_data.informacje_dodatkowe
+    )
+
+    
+    
+    db.add(db_pomiar)
+    await db.commit()       # Zapisujemy zmiany w bazie
+    await db.refresh(db_pomiar) # Odświeżamy obiekt, żeby np. pobrać wygenerowane ID
+    return db_pomiar

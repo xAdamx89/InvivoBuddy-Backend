@@ -1,21 +1,20 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Request
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.ext.asyncio import AsyncSession
-import crud, schemas, database
-import security
+
+# Importujemy nasze nowe routery
+from routers import auth, users, pomiary
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 app = FastAPI(title="InvivoBuddy API")
 
+# --- Globalne Exception Handlery (zostają w main) ---
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    # Tutaj logujesz błąd w konsoli serwera (na Debianie)
     print(f"BŁĄD KRYTYCZNY: {exc}")
-    
-    # Zwracasz ładnego JSON-a do Androida
     return JSONResponse(
         status_code=500,
         content={
@@ -33,78 +32,19 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
-# Rejestracja użytkownika
-@app.post("/register", response_model=schemas.OdpowiedzOgolna, status_code=status.HTTP_201_CREATED)
-async def register_user(user: schemas.ZadanieRejestracja, db: AsyncSession = Depends(database.get_db)):
-    # 1. Sprawdź czy user już istnieje (po username)
-    existing_user = await crud.get_user_by_username(db, user.username)
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail="Użytkownik o tej nazwie już istnieje"
-        )
-    
-    # 2. Tworzenie użytkownika w bazie
-    return await crud.create_user(db=db, user=user)
+# --- Dołączanie routerów do aplikacji ---
+app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(pomiary.router)
 
-# Endpoint do logowania się userów
-@app.post("/login", response_model=schemas.OdpowiedzToken)
-async def login(login_data: schemas.ZadanieUserLogin, db: AsyncSession = Depends(database.get_db)):
-    # 1. Pobierz użytkownika z bazy
-    user = await crud.get_user_by_username(db, login_data.username)
-    
-    # 2. Sprawdź czy user istnieje i czy hasło jest poprawne
-    if not user or not security.verify_password(login_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Błędny login lub hasło lub użytkownik nie istnieje",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    # 3. Wygeneruj tokeny
-    access_token = security.create_access_token(data={"sub": user.username})
-    
-    # Dla uproszczenia na razie dajemy ten sam token jako refresh lub pusty string
-    return {
-        "access_token": access_token,
-        "refresh_token": "temporary_refresh_token",
-        "token_type": "bearer"
-    }
-
-@app.get("/users/me", response_model=schemas.OdpowiedzJa)
-async def read_users_me(
-    pobierz_me: schemas.ZadanieJa,
-    db: AsyncSession = Depends(database.get_db),
-    current_user: schemas.OdpowiedzJa = Depends(crud.get_current_user)
-    ):
-    return current_user
-
-@app.post("/pomiary/pobierz", response_model=schemas.OdpowiedzListaPomiarow)
-async def pobierz_pomiary(
-    pobierz_pomiary: schemas.ZadanieListaPomiarow,
-    db: AsyncSession = Depends(database.get_db),
-    current_user: schemas.OdpowiedzJa = Depends(crud.get_current_user)
-    ):
-    pass
-
-@app.post("/pomiary/dodaj", response_model=schemas.OdpowiedzOgolna)
-async def dodaj_pomiar(
-    nowy_pomiar: schemas.ZadanieDodajPomiar,
-    db: AsyncSession = Depends(database.get_db),
-    current_user: schemas.OdpowiedzJa = Depends(crud.get_current_user)
-    ):
-    pass
-
-@app.put("/pomiary/zmodyfikuj", response_model=schemas.OdpowiedzZmodyfikujPomiar)
-async def zmodyfikuj_pomiar(response: schemas.ZadanieZmodyfikujPomiar, db: AsyncSession = Depends(database.get_db)):
-    pass
 
 # Prosty testowy endpoint
 @app.get("/")
 async def root():
     return {"message": "InvivoBuddy API is running"}
 
+
 if __name__ == "__main__":
     import uvicorn
-    # host 0.0.0.0 pozwala na dostęp z innych urządzeń w sieci (np. z Twojego Androida)
+    # host 0.0.0.0 ułatwia testowanie aplikacji bezpośrednio z telefonu z Androidem
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

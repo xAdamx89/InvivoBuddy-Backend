@@ -9,7 +9,9 @@ class ZadanieJa(BaseModel):
     username: str
     email: EmailStr | None
     created_at: datetime
-
+    avatar_url: str | None
+    
+    model_config = {"from_attributes": True}
 class OdpowiedzJa(BaseModel):
     id: int
     username: str
@@ -30,15 +32,6 @@ class ZadanieUserLogin(BaseModel):
     username: str
     password: str
 
-# To wysyła Serwer do Androida (nigdy nie wysyłamy hasła!)
-class OdpowiedzUser(BaseModel):
-    id: int
-    username: str
-    email: EmailStr | None
-    created_at: datetime
-    avatar_url: str | None
-    
-    model_config = {"from_attributes": True}
 
 
 
@@ -58,21 +51,16 @@ class ZadanieWykonajPomiar(BaseModel):
 
 
 class ZadanieDodajPomiar(BaseModel):
-    imie_i_nazwisko: str
-    wiek: int
+    user_id: int
     godzina_pomiaru: datetime
-    rok: int
-    numer_cyklu: int
-    pierwszy_dzien_miesiaczki: int
-    dlugosc_cyklu: int
-    dlugosc_fazy_lutealnej: int
+    okres: bool
+
     informacje_dodatkowe: str | None = None
 
 class ZadanieZmodyfikujPomiar(BaseModel):
-    pass
-
-class OdpowiedzZmodyfikujPomiar(BaseModel):
-    pass
+    user_id: int
+    godzina_pomiaru: datetime
+    informacje_dodatkowe: str | None = None
 
 class ZadanieListaPomiarow(BaseModel):
     pass
