@@ -18,7 +18,7 @@ class User(Base):
 
     # POPRAWKA: Czysta relacja dwukierunkowa
     tabele: Mapped[List["TabelePomiarowe"]] = relationship(
-        "TabelePomiarowe", 
+        "TabelePomiarowe",
         back_populates="owner",
         cascade="all, delete-orphan"
     )
@@ -32,7 +32,7 @@ class Poradnik(Base):
     tresc: Mapped[str] = mapped_column(String(1000), nullable=False)
     
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), 
+        DateTime(timezone=True),
         server_default=func.now()
     )
 
@@ -57,7 +57,7 @@ class TabelePomiarowe(Base):
 
     
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), 
+        DateTime(timezone=True),
         server_default=func.now()
     )
 
@@ -65,7 +65,7 @@ class TabelePomiarowe(Base):
     owner: Mapped["User"] = relationship("User", back_populates="tabele")
     pomiary: Mapped[List["Pomiary"]] = relationship(
         "Pomiary", back_populates="tabela_pomiaru", cascade="all, delete-orphan"
-    )  
+    )
 class Pomiary(Base):
     __tablename__ = "pomiary"
 
