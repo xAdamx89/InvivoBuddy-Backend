@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 import crud, schemas, database, security
 
@@ -17,8 +18,14 @@ async def register_user(user: schemas.ZadanieRejestracja, db: AsyncSession = Dep
     return await crud.create_user(db=db, user=user)
 
 @router.post("/login", response_model=schemas.OdpowiedzToken)
-async def login(login_data: schemas.ZadanieUserLogin, db: AsyncSession = Depends(database.get_db)):
+async def login(
+    # Zamiast schemas.ZadanieUserLogin używamy wbudowanego formularza
+    login_data: OAuth2PasswordRequestForm = Depends(), 
+    db: AsyncSession = Depends(database.get_db)
+):
+    # Domyślny formularz FastAPI używa pól .username i .password
     user = await crud.get_user_by_username(db, login_data.username)
+    
     if not user or not security.verify_password(login_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
