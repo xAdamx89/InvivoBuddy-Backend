@@ -31,6 +31,17 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={"error": "Błędne dane wejściowe", "params": exc.errors()}
     )
 
+@app.exception_handler(TypeError)
+async def json_type_error_handler(request: Request, exc: TypeError):
+    print(f"Błąd serializacji JSON: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={
+            "status": "error",
+            "message": "Serwer próbował zwrócić dane w nieobsługiwanym formacie (np. surowe bajty)."
+        }
+    )
+
 
 # --- Dołączanie routerów do aplikacji ---
 app.include_router(auth.router)
