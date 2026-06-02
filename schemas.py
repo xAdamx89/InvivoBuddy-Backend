@@ -1,3 +1,5 @@
+
+
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from datetime import datetime
 from models import Pomiary
@@ -51,7 +53,7 @@ class ZadanieWykonajPomiar(BaseModel):
 
 
 class ZadanieDodajPomiar(BaseModel):
-    user_id: int
+    temperatura: float
     godzina_pomiaru: datetime
     okres: bool
 
@@ -62,7 +64,12 @@ class ZadanieZmodyfikujPomiar(BaseModel):
     godzina_pomiaru: datetime
     informacje_dodatkowe: str | None = None
 
+
+
 class ZadanieListaPomiarow(BaseModel):
     pass
+
+
 class OdpowiedzListaPomiarow(BaseModel):
-    pass
+    status: str
+    pomiary: list[Pomiary]

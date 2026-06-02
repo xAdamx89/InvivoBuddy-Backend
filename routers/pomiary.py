@@ -7,13 +7,25 @@ router = APIRouter(
     tags=["Pomiary"]
 )
 
-@router.post("/pobierz", response_model=schemas.OdpowiedzListaPomiarow)
+# router.py
+@router.get("/pobierz", response_model=schemas.OdpowiedzListaPomiarow)
 async def pobierz_pomiary(
-    pobierz_pomiary: schemas.ZadanieListaPomiarow,
     db: AsyncSession = Depends(database.get_db),
     current_user: schemas.OdpowiedzJa = Depends(crud.get_current_user)
 ):
-    pass
+    # Bezpieczne zapytanie SQL przy użyciu bindowania parametrów z SQLAlchemy
+    # Filtrujemy automatycznie po ID zalogowanego użytkownika!
+    query = """SELECT id, wartosc, data, notatka FROM POMIARY WHERE user_id = :user_id"""
+    result = await db.execute(query, {"user_id": current_user.id})
+    pomiary = result.fetchall()
+    
+    # Mapowanie na format odpowiedzi
+    lista_pomiarow = [
+        schemas.OdpowiedzPomiar(id=p.id, wartosc=p.wartosc, data=str(p.data), notatka=p.notatka) 
+        for p in pomiary
+    ]
+    
+    return schemas.OdpowiedzListaPomiarow(status="success", pomiary=lista_pomiarow)    
 
 @router.post("/dodaj", response_model=schemas.OdpowiedzOgolna)
 async def dodaj_pomiar(
@@ -21,7 +33,7 @@ async def dodaj_pomiar(
     db: AsyncSession = Depends(database.get_db),
     current_user: schemas.OdpowiedzJa = Depends(crud.get_current_user)
 ):
-    pass
+    print(nowy_pomiar)
 
 @router.put("/zmodyfikuj", response_model=schemas.OdpowiedzOgolna)
 async def zmodyfikuj_pomiar(
