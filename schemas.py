@@ -3,6 +3,7 @@
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from datetime import datetime
 from models import Pomiary
+
 class OdpowiedzOgolna(BaseModel):
     response: str
 
@@ -45,12 +46,25 @@ class OdpowiedzToken(BaseModel):
 
 
 
+class OdpowiedzPomiar(BaseModel):
+    PomiarId: int
+    temperatura: float
+    data_pomiaru: datetime
+    godzina_pomiaru: datetime
+    informacje_dodatkowe: str | None
+    dzien_cyklu: int
+
+    model_config = {"from_attributes": True}
+
+class ZadaniePomiar(BaseModel):
+    temperatura: float
+    godzina_pomiaru: datetime
+    okres: bool
+    informacje_dodatkowe: str | None = None
+
 class ZadanieWykonajPomiar(BaseModel):
     access_token: str
-    pomiar: Pomiary
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
+    pomiar: ZadaniePomiar
 
 class ZadanieDodajPomiar(BaseModel):
     temperatura: float
@@ -72,4 +86,4 @@ class ZadanieListaPomiarow(BaseModel):
 
 class OdpowiedzListaPomiarow(BaseModel):
     status: str
-    pomiary: list[Pomiary]
+    pomiary: list[OdpowiedzPomiar]
