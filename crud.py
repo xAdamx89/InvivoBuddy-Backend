@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 import models, schemas, security
+from sqlalchemy import select, desc, insert
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -11,7 +12,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from jose import jwt, JWTError  # lub od firmy jose: from jose import jwt, JWTError
 from database import get_db
 import schemas
-import models # Zakładam, że tak nazywa się Twój plik z modelami bazy danych
+from models import TabelePomiarowe, Pomiary
+
+from datetime import datetime, timedelta, time
+
+from utils.utils import round_time_to_half_hour
 
 load_dotenv()  # Ładuje zmienne środowiskowe z pliku .
 
@@ -20,6 +25,66 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+async def najmlodsza_tabelepomiarowe(db: AsyncSession, user_id):
+    """Funkcja do pobrania najmłodszej TabelaPomiarowa."""
+    stmt = (
+        select(TabelePomiarowe)
+        .where(TabelePomiarowe.owner_id == user_id)
+        .order_by(desc(TabelePomiarowe.created_at))
+        .limit(1)
+    )
+    resp = await db.execute(stmt)
+    dane = resp.scalar_one_or_none()
+
+    return dane
+
+async def utworz_tabelepomiarowe_dodaj_pomiar(db: AsyncSession, db_pomiar, user_id, dane_najmlodszej_tabelipomiarow, test):
+    dane = dane_najmlodszej_tabelipomiarow
+
+    dt_from_request = db_pomiar.data_pomiaru
+    zaokraglony_dt = round_time_to_half_hour(dt_from_request)
+
+    stmt = (
+        insert(TabelePomiarowe)
+        .values(
+            owner_id = user_id,
+            godzina_pomiaru = zaokraglony_dt,
+            koniec_cyklu = False
+        )
+    )
+    try:
+        result = await db.execute(stmt)
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        print(f"Błąd zapisu do bazy: {e}")
+        raise
+
+    dane = await najmlodsza_tabelepomiarowe(db, user_id)
+
+    await dodaj_pomiar_crud(db, db_pomiar, user_id, dane, zaokraglony_dt)
+
+async def dodaj_pomiar_crud(db: AsyncSession, db_pomiar, user_id, dane_najmlodszej_tabelipomiarow, zaokraglony_dt):
+    dane = dane_najmlodszej_tabelipomiarow
+    stmt = (
+        insert(Pomiary)
+        .values(
+            tabela_pomiaru_id = dane.TabelaPomiarowaId,
+            temperatura = db_pomiar.temperatura,
+            godzina_pomiaru = zaokraglony_dt,
+            okres = db_pomiar.okres
+        )
+    )
+    try:
+        result = await db.execute(stmt)
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        print(f"\n\nBłąd zapisu do bazy: {e}\n\n")
+        raise
+
+    return 'OK'
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme), 
@@ -77,19 +142,40 @@ async def create_user(db: AsyncSession, user: schemas.ZadanieRejestracja):
     await db.refresh(db_user)
     return db_user
 
-
-async def dodaj_pomiar(db: AsyncSession, pomiar_data: schemas.ZadanieDodajPomiar, user_id: int):
+async def dodaj_pomiar(db: AsyncSession, user_id: int, pomiar_data: schemas.ZadanieDodajPomiar, test: bool = False):
     # Tworzymy obiekt modelu SQLAlchemy na podstawie danych ze schematu Pydantic
-    db_pomiar = models.Pomiar(
-        user_id=user_id, # Pobieramy bezpiecznie z zalogowanego użytkownika
-        godzina_pomiaru=pomiar_data.godzina_pomiaru,
+    db_pomiar = models.Pomiary(
+        temperatura=pomiar_data.temperatura,
+        data_pomiaru=pomiar_data.data_pomiaru,
         okres=pomiar_data.okres,
         informacje_dodatkowe=pomiar_data.informacje_dodatkowe
     )
 
+    dt_from_request = db_pomiar.data_pomiaru
+    zaokraglony_dt = round_time_to_half_hour(dt_from_request)
     
-    
-    db.add(db_pomiar)
-    await db.commit()       # Zapisujemy zmiany w bazie
-    await db.refresh(db_pomiar) # Odświeżamy obiekt, żeby np. pobrać wygenerowane ID
-    return db_pomiar
+    dane_najmlodszej_tabelipomiarow = await najmlodsza_tabelepomiarowe(db, user_id)
+
+    # Jeżeli nie ma tablicy wpisów temperatur albo najmłodsza tablica jest zamknięta, to zakłada nową i do niej wpisuje.
+    if dane_najmlodszej_tabelipomiarow is None or dane_najmlodszej_tabelipomiarow.koniec_cyklu is True:
+        await utworz_tabelepomiarowe_dodaj_pomiar(db, db_pomiar, user_id, dane_najmlodszej_tabelipomiarow, test)
+    # Jeżeli tablica istnieje i nie jest zamknięta
+    elif dane_najmlodszej_tabelipomiarow.koniec_cyklu is False:
+        stmt = (
+            select(Pomiary)
+            .where(Pomiary.tabela_pomiaru_id == dane_najmlodszej_tabelipomiarow.TabelaPomiarowaId)
+        )
+        resp = await db.execute(stmt)
+        dane = resp.scalar_one_or_none()
+
+        if dane is not None:
+            return 1 , 'Er: Pomiar już wpisany'
+        else:
+            dodaj_pomiar_crud(db, db_pomiar, user_id, dane_najmlodszej_tabelipomiarow, zaokraglony_dt)
+
+    return 0, 'OK'
+
+async def sprawdz_tablica_pomiarow(user_id):
+    pass
+
+

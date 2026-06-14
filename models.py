@@ -1,5 +1,5 @@
 from typing import List
-from sqlalchemy import String, Integer, Boolean, DateTime, ForeignKey, func, Time, Enum
+from sqlalchemy import String, Integer, Boolean, DateTime, ForeignKey, func, Time, Enum, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 from datetime import datetime
 from database import Base
@@ -44,16 +44,19 @@ class TabelePomiarowe(Base):
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.UserId", ondelete="CASCADE"), nullable=False)
     user_id_udostepnione: Mapped[int | None] = mapped_column(nullable=True)
 
-    imie_i_nazwisko: Mapped[str] = mapped_column(String(100), nullable=False)
-    wiek: Mapped[int] = mapped_column(nullable=False)
-    godzina_pomiaru: Mapped[Time] = mapped_column(Time, nullable=False)
-    rok: Mapped[int] = mapped_column(nullable=False)
-    numer_cyklu: Mapped[int] = mapped_column(nullable=False)
-    pierwszy_dzien_miesiaczki: Mapped[int] = mapped_column(nullable=False)
-    dlugosc_cyklu: Mapped[int] = mapped_column(nullable=False)
-    dlugosc_fazy_lutealnej: Mapped[int] = mapped_column(nullable=False)
+    imie_i_nazwisko: Mapped[str] = mapped_column(String(100), nullable=True)
+    wiek: Mapped[int] = mapped_column(nullable=True)
+    godzina_pomiaru: Mapped[Time] = mapped_column(Time, nullable=True)
+    rok: Mapped[int] = mapped_column(nullable=True)
+    numer_cyklu: Mapped[int] = mapped_column(nullable=True)
+    pierwszy_dzien_miesiaczki: Mapped[int] = mapped_column(nullable=True)
+    dlugosc_cyklu: Mapped[int] = mapped_column(nullable=True)
+    dlugosc_fazy_lutealnej: Mapped[int] = mapped_column(nullable=True)
     informacje_dodatkowe: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    koniec_cyklu: Mapped[bool] = mapped_column(nullable=False)
+    koniec_cyklu: Mapped[bool] = mapped_column(
+            nullable=False,
+            server_default=false()
+        )
 
     
     created_at: Mapped[datetime] = mapped_column(
@@ -66,26 +69,58 @@ class TabelePomiarowe(Base):
     pomiary: Mapped[List["Pomiary"]] = relationship(
         "Pomiary", back_populates="tabela_pomiaru", cascade="all, delete-orphan"
     )
+
 class Pomiary(Base):
     __tablename__ = "pomiary"
-
+    # auto
     PomiarId: Mapped[int] = mapped_column(primary_key=True, index=True)
 
     # KLUCZ OBCY: Wskazuje na konkretny rekord w tabeli_pomiaru
+    # Pobrane z bazy
     tabela_pomiaru_id: Mapped[int] = mapped_column(
         ForeignKey("tabela_pomiaru.TabelaPomiarowaId"), nullable=False
     )
 
-    data_pomiaru: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    # Wylicza z creted_at
+    data_pomiaru: Mapped[datetime] = mapped_column(
+            DateTime(timezone=True), 
+            nullable=True,
+            server_default=func.now()
+        )
+    # Z danych
     temperatura: Mapped[float] = mapped_column(nullable=False)
-    godzina_pomiaru: Mapped[Time] = mapped_column(Time, nullable=False)
-    informacje_dodatkowe: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    dzien_cyklu: Mapped[int] = mapped_column(nullable=False)
+    # Wylicza z creted_at
+    godzina_pomiaru: Mapped[Time] = mapped_column(
+            Time, 
+            nullable=False
+        )
+    # auto
+    informacje_dodatkowe: Mapped[str | None] = mapped_column(
+            String(255), 
+            nullable=True
+        )
+    # auto
+    dzien_cyklu: Mapped[int] = mapped_column(nullable=True)
 
-    przyjmowanie_progesteronu: Mapped[bool] = mapped_column(nullable=False)
+    # auto
+    przyjmowanie_progesteronu: Mapped[bool] = mapped_column(
+            nullable=True,
+            server_default=false()
+        )
     
-    krwawienie_plamienie_brudzenie: Mapped[TypObjawuKrwi] = mapped_column(Enum(TypObjawuKrwi), nullable=False)
+    # auto
+    okres: Mapped[Boolean] = mapped_column(
+            Boolean,
+            server_default=false()
+        )
+    
+    krwawienie_plamienie_brudzenie: Mapped[TypObjawuKrwi] = mapped_column(
+            Enum(TypObjawuKrwi), 
+            nullable=True,
+            server_default="N"
+        )
 
+    # auto
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now()
@@ -95,3 +130,4 @@ class Pomiary(Base):
         "TabelePomiarowe",
         back_populates="pomiary"
     )
+

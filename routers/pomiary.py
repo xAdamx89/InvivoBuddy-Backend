@@ -1,6 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
+from sqlalchemy import text, select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 import crud, schemas, database
+
+from crud import dodaj_pomiar
+
+from models import TabelePomiarowe
 
 router = APIRouter(
     prefix="/pomiary",
@@ -28,12 +33,20 @@ async def pobierz_pomiary(
     return schemas.OdpowiedzListaPomiarow(status="success", pomiary=lista_pomiarow)    
 
 @router.post("/dodaj", response_model=schemas.OdpowiedzOgolna)
-async def dodaj_pomiar(
+async def dodaj_pomiar_request(
     nowy_pomiar: schemas.ZadanieDodajPomiar,
+    request: Request,
     db: AsyncSession = Depends(database.get_db),
     current_user: schemas.OdpowiedzJa = Depends(crud.get_current_user)
 ):
-    print(nowy_pomiar)
+    user_id = current_user.UserId
+
+    status, resp = await dodaj_pomiar(db, user_id, nowy_pomiar, True)
+
+    if status != 0:
+        return {"status": f"{resp}"}
+    else:
+        return {"status": "OK"}
 
 @router.put("/zmodyfikuj", response_model=schemas.OdpowiedzOgolna)
 async def zmodyfikuj_pomiar(
