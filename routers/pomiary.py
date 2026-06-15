@@ -3,7 +3,9 @@ from sqlalchemy import text, select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 import crud, schemas, database
 
-from crud import dodaj_pomiar
+from schemas import stmt_data
+
+from crud import dodaj_pomiar, pobierz_liste_danych, dodaj_dane_testowe
 
 from models import TabelePomiarowe
 
@@ -13,24 +15,21 @@ router = APIRouter(
 )
 
 # router.py
-@router.get("/pobierz", response_model=schemas.OdpowiedzListaPomiarow)
-async def pobierz_pomiary(
+@router.put(
+            "/pobierz_tablice_pomiarow", 
+            response_model=schemas.OdpowiedzLista
+        )
+async def pobierz_tablice_pomiarow(
+    stmt_data: stmt_data,
     db: AsyncSession = Depends(database.get_db),
     current_user: schemas.OdpowiedzJa = Depends(crud.get_current_user)
 ):
-    # Bezpieczne zapytanie SQL przy użyciu bindowania parametrów z SQLAlchemy
-    # Filtrujemy automatycznie po ID zalogowanego użytkownika!
-    query = """SELECT id, wartosc, data, notatka FROM POMIARY WHERE user_id = :user_id"""
-    result = await db.execute(query, {"user_id": current_user.id})
-    pomiary = result.fetchall()
-    
-    # Mapowanie na format odpowiedzi
-    lista_pomiarow = [
-        schemas.OdpowiedzPomiar(id=p.id, wartosc=p.wartosc, data=str(p.data), notatka=p.notatka) 
-        for p in pomiary
-    ]
-    
-    return schemas.OdpowiedzListaPomiarow(status="success", pomiary=lista_pomiarow)    
+    stmt = (
+        select(TabelePomiarowe)
+        .where(TabelePomiarowe.owner_id == current_user.id)
+        )
+    res = db.execute(stmt)
+    #dane = res.
 
 @router.post("/dodaj", response_model=schemas.OdpowiedzOgolna)
 async def dodaj_pomiar_request(
@@ -54,3 +53,12 @@ async def zmodyfikuj_pomiar(
     db: AsyncSession = Depends(database.get_db)
 ):
     pass
+
+@router.put("/dodajtestowe")
+async def dodaj_dane_testowe_endpoint(
+        db: AsyncSession = Depends(database.get_db)
+):
+    # Dodajemy await, ponieważ funkcja jest async
+    await dodaj_dane_testowe(db) 
+    return {"status": "Dane testowe zostały dodane"}
+

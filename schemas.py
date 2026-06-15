@@ -1,4 +1,5 @@
-from typing import Optional
+from typing import Optional, Any
+from enum import Enum
 
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from datetime import datetime
@@ -34,6 +35,24 @@ class OdpowiedzJa(BaseModel):
 
     model_config = {"from_attributes": True}
 
+class OdpowiedzPomiar(BaseModel):
+    PomiarId: int
+    temperatura: float
+    data_pomiaru: datetime
+    godzina_pomiaru: datetime
+    informacje_dodatkowe: str | None
+    dzien_cyklu: int
+
+    model_config = {"from_attributes": True}
+
+class OdpowiedzLista(BaseModel):
+    status: str
+    dane: list[Any]
+
+class stmt_data(BaseModel):
+    from_table: str
+    where: str
+
 class ZadanieRejestracja(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     email: EmailStr | None = None
@@ -55,15 +74,6 @@ class OdpowiedzToken(BaseModel):
     refresh_token: str
     token_type: str = "bearer"
 
-class OdpowiedzPomiar(BaseModel):
-    PomiarId: int
-    temperatura: float
-    data_pomiaru: datetime
-    godzina_pomiaru: datetime
-    informacje_dodatkowe: str | None
-    dzien_cyklu: int
-
-    model_config = {"from_attributes": True}
 
 # class ZadaniePomiar(BaseModel):
 #     temperatura: float
@@ -83,6 +93,8 @@ class ZadanieZmodyfikujPomiar(BaseModel):
 class ZadanieListaPomiarow(BaseModel):
     pass
 
-class OdpowiedzListaPomiarow(BaseModel):
-    status: str
-    pomiary: list[OdpowiedzPomiar]
+class TypObjawuKrwi(str, Enum):
+    KRWAWIENIE = "K"
+    PLAMIENIE = "P"
+    BRUDZENIE = "B"
+    BRAK = "N"

@@ -37,7 +37,7 @@ class Poradnik(Base):
     )
 
 class TabelePomiarowe(Base):
-    __tablename__ = "tabela_pomiaru"
+    __tablename__ = "tabele_pomiarowe"
 
     TabelaPomiarowaId: Mapped[int] = mapped_column(primary_key=True, index=True)
 
@@ -67,7 +67,7 @@ class TabelePomiarowe(Base):
     # RELACJE
     owner: Mapped["User"] = relationship("User", back_populates="tabele")
     pomiary: Mapped[List["Pomiary"]] = relationship(
-        "Pomiary", back_populates="tabela_pomiaru", cascade="all, delete-orphan"
+        "Pomiary", back_populates="tabele_pomiarowe", cascade="all, delete-orphan"
     )
 
 class Pomiary(Base):
@@ -77,8 +77,8 @@ class Pomiary(Base):
 
     # KLUCZ OBCY: Wskazuje na konkretny rekord w tabeli_pomiaru
     # Pobrane z bazy
-    tabela_pomiaru_id: Mapped[int] = mapped_column(
-        ForeignKey("tabela_pomiaru.TabelaPomiarowaId"), nullable=False
+    tabele_pomiarowe_id: Mapped[int] = mapped_column(
+        ForeignKey("tabele_pomiarowe.TabelaPomiarowaId"), nullable=False
     )
 
     # Wylicza z creted_at
@@ -114,10 +114,9 @@ class Pomiary(Base):
             server_default=false()
         )
     
-    krwawienie_plamienie_brudzenie: Mapped[TypObjawuKrwi] = mapped_column(
-            Enum(TypObjawuKrwi), 
+    krwawienie_plamienie_brudzenie: Mapped[str | None] = mapped_column(
             nullable=True,
-            server_default="N"
+            server_default="BRAK"
         )
 
     # auto
@@ -126,8 +125,8 @@ class Pomiary(Base):
         server_default=func.now()
     )
 
-    tabela_pomiaru: Mapped["TabelePomiarowe"] = relationship(
-        "TabelePomiarowe",
+    tabele_pomiarowe: Mapped["TabelePomiarowe"] = relationship(
+        "tabele_pomiarowe",
         back_populates="pomiary"
     )
 

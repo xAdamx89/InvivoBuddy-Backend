@@ -1,3 +1,4 @@
+import random
 import os
 from dotenv import load_dotenv
 
@@ -175,7 +176,65 @@ async def dodaj_pomiar(db: AsyncSession, user_id: int, pomiar_data: schemas.Zada
 
     return 0, 'OK'
 
+async def dane_pomiarow(db: AsyncSession):
+    pass
+
 async def sprawdz_tablica_pomiarow(user_id):
     pass
 
+async def pobierz_liste_danych(db: AsyncSession, bez_where: bool, stmt_data):
+    if bez_where is False:
+        stmt = (
+            select(stmt_data.from_table)
+        )
+        resp = await db.execute(stmt)
+        dane = resp.scalar_one_or_none()
 
+        return dane
+    
+    else:
+        stmt = (
+            select(stmt_data.from_table)
+            .where(stmt_data.where)
+        )
+        resp = await db.execute(stmt)
+
+        return dane.scalars().all()
+
+async def dodaj_dane_testowe(db: AsyncSession, owner_id: int = 1):
+    target_ids = [47, 48]
+    
+    try:
+        for t_id in target_ids:
+            # 1. Tworzenie tabeli z konkretnym ID
+            nowa_tabela = TabelePomiarowe(
+                TabelaPomiarowaId=t_id,  # Jawne ID
+                owner_id=owner_id,
+                koniec_cyklu=False,
+                created_at=datetime.now()
+            )
+            db.add(nowa_tabela)
+            await db.flush() 
+
+            # 2. Tworzenie 30 pomiarów dla tej tabeli
+            for i in range(30):
+                nowy_pomiar = Pomiary(
+                    tabela_pomiaru_id=t_id, # Powiązanie z tabelą 46 lub 47
+                    temperatura=round(random.uniform(36.4, 37.0), 2),
+                    godzina_pomiaru=time(7, 0),
+                    data_pomiaru=datetime.now() - timedelta(days=i),
+                    okres=False,
+                    przyjmowanie_progesteronu=False,
+                    dzien_cyklu=i + 1,
+                    krwawienie_plamienie_brudzenie="N",
+                    created_at=datetime.now()
+                )
+                db.add(nowy_pomiar)
+        
+        await db.commit()
+        print(f"Pomyślnie dodano tabele {target_ids} z 30 pomiarami każda.")
+        
+    except Exception as e:
+        await db.rollback()
+        print(f"Błąd: {e}")
+        raise
