@@ -1,6 +1,8 @@
 venv/*
 .env
 __pycache__/
-migrations/versions/*
 alembic.ini
-migrations/*
+migrations/__pychache__/
+migrations/env.py
+migrations/README
+migrations/script.*
