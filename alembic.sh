@@ -26,6 +26,18 @@ elif [ "$1" == "4" ]; then
 elif [ "$1" == "5" ]; then
     # Sprawdź status migracji alembic
     alembic current
+elif [ "$1" == "6" ]; then
+    # Zapomnięcie aktualnej nie zamkniętej migracji
+    alembic stamp base
+elif [ "$1" == "7" ]; then
+    # Zresetuj całą wersje alembic
+    read -p "Czy na pewno chcesz zresetować historie wersji migracji alembic? (./migrations/versions/) (Y/n): " decyzja
+    if [ "$decyzja" == "Y" ]; then
+        rm migrations/versions/*.py
+        alembic revision --autogenerate -m "reset"
+        alembic upgrade head
+    fi
+
 else
     echo "Argumenty:"
     echo "1 - Plan budowy bazy danych - sprawdza różnice między modelem a bazą danych i generuje migrację"
@@ -33,4 +45,6 @@ else
     echo "3 - wykonaj 1 + 2"
     echo "4 - Cofnięcie ostatniej zmiany"
     echo "5 - Sprawdź status migracji alembic"
+    echo "6 - Zapomnięcie aktualnej nie zamkniętej migracji"
+    echo "7 - Zresetuj całą wersje alembic"
 fi
