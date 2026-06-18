@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from alembic import context
 
-from app.models.models import Base
+from app.models.pomiar import Base
 
 load_dotenv()
 

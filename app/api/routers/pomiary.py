@@ -7,7 +7,7 @@ from app.schemas.schemas import stmt_data
 
 from app.repositories.crud import dodaj_pomiar, pobierz_liste_danych, dodaj_dane_testowe
 
-from app.models.models import TabelePomiarowe
+from app.models.pomiar import TabelePomiarowe
 
 router = APIRouter(
     prefix="/pomiary",

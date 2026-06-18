@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-import app.models.models as models, app.schemas.schemas as schemas, app.api.core.security as security
+import app.models.pomiar as pomiar, app.schemas.schemas as schemas, app.core.security as security
 from sqlalchemy import select, desc, insert
 
 from fastapi import Depends, HTTPException, status
@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from jose import jwt, JWTError  # lub od firmy jose: from jose import jwt, JWTError
 from app.db.database import get_db
 import app.schemas.schemas as schemas
-from app.models.models import TabelePomiarowe, Pomiary
+from app.models.pomiar import TabelePomiarowe, Pomiary
 
 from datetime import datetime, timedelta, time
 
@@ -69,7 +69,7 @@ async def utworz_tabelepomiarowe_dodaj_pomiar(db: AsyncSession, db_pomiar, user_
 async def dodaj_pomiar_crud(db: AsyncSession, db_pomiar, user_id, dane_najmlodszej_tabelipomiarow, zaokraglony_dt):
     dane = dane_najmlodszej_tabelipomiarow
     stmt = (
-        insert(Pomiary)
+        insert(pomiar)
         .values(
             tabela_pomiaru_id = dane.TabelaPomiarowaId,
             temperatura = db_pomiar.temperatura,
@@ -90,7 +90,7 @@ async def dodaj_pomiar_crud(db: AsyncSession, db_pomiar, user_id, dane_najmlodsz
 async def get_current_user(
     token: str = Depends(oauth2_scheme), 
     db: AsyncSession = Depends(get_db)
-) -> models.User:
+) -> pomiar.User:
     
     # Tworzymy generyczny błąd, który wyrzucimy, jeśli token będzie zły
     credentials_exception = HTTPException(
@@ -122,7 +122,7 @@ async def get_current_user(
     return user
 
 async def get_user_by_username(db: AsyncSession, username: str):
-    result = await db.execute(select(models.User).filter(models.User.username == username))
+    result = await db.execute(select(pomiar.User).filter(pomiar.User.username == username))
     return result.scalars().first()
 
 async def create_user(db: AsyncSession, user: schemas.ZadanieRejestracja):
@@ -130,7 +130,7 @@ async def create_user(db: AsyncSession, user: schemas.ZadanieRejestracja):
     hashed_pwd = security.hash_password(user.password)
     
     # 2. Tworzymy obiekt modelu
-    db_user = models.User(
+    db_user = pomiar.User(
         username=user.username,
         email=user.email,
         avatar_url=user.avatar_url,
@@ -145,7 +145,7 @@ async def create_user(db: AsyncSession, user: schemas.ZadanieRejestracja):
 
 async def dodaj_pomiar(db: AsyncSession, user_id: int, pomiar_data: schemas.ZadanieDodajPomiar, test: bool = False):
     # Tworzymy obiekt modelu SQLAlchemy na podstawie danych ze schematu Pydantic
-    db_pomiar = models.Pomiary(
+    db_pomiar = pomiar.Pomiary(
         temperatura=pomiar_data.temperatura,
         data_pomiaru=pomiar_data.data_pomiaru,
         okres=pomiar_data.okres,
@@ -163,8 +163,8 @@ async def dodaj_pomiar(db: AsyncSession, user_id: int, pomiar_data: schemas.Zada
     # Jeżeli tablica istnieje i nie jest zamknięta
     elif dane_najmlodszej_tabelipomiarow.koniec_cyklu is False:
         stmt = (
-            select(Pomiary)
-            .where(Pomiary.tabela_pomiaru_id == dane_najmlodszej_tabelipomiarow.TabelaPomiarowaId)
+            select(pomiar)
+            .where(pomiar.tabela_pomiaru_id == dane_najmlodszej_tabelipomiarow.TabelaPomiarowaId)
         )
         resp = await db.execute(stmt)
         dane = resp.scalar_one_or_none()
@@ -218,7 +218,7 @@ async def dodaj_dane_testowe(db: AsyncSession, owner_id: int = 1):
 
             # 2. Tworzenie 30 pomiarów dla tej tabeli
             for i in range(30):
-                nowy_pomiar = Pomiary(
+                nowy_pomiar = pomiar(
                     tabela_pomiaru_id=t_id, # Powiązanie z tabelą 46 lub 47
                     temperatura=round(random.uniform(36.4, 37.0), 2),
                     godzina_pomiaru=time(7, 0),

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-import app.repositories.crud as crud, app.schemas.schemas as schemas, app.db.database as database, app.api.core.security as security
+import app.repositories.crud as crud, app.schemas.schemas as schemas, app.db.database as database, app.core.security as security
 
 router = APIRouter(
     tags=["Uwierzytelnianie i rejestracja"]
