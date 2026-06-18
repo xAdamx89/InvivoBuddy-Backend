@@ -17,7 +17,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Kopiujemy resztę kodu aplikacji
-COPY . .
+COPY ./app ./APP
 
 # Komenda uruchamiająca serwer
 # Ważne: host 0.0.0.0 pozwala na ruch z zewnątrz kontenera
