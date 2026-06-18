@@ -9,6 +9,7 @@ from pydantic.alias_generators import to_camel
 
 class OdpowiedzOgolna(BaseModel):
     status: str
+    resp: Any
 
 class ZadanieDodajPomiar(BaseModel):
     temperatura: float
@@ -58,6 +59,9 @@ class ZadanieRejestracja(BaseModel):
     email: EmailStr | None = None
     password: str = Field(..., min_length=8)
     avatar_url: str | None = None
+
+    class Config:
+        from_attributes = True
 
 class ZadanieUserLogin(BaseModel):
     username: str

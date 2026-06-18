@@ -1,0 +1,29 @@
+app/
+├── api/                # 1. Warstwa Prezentacji (API / Controllers)
+│   ├── dependencies.py # Wstrzykiwanie zależności (sesje DB, autoryzacja)
+│   └── routers/        # Endpointy pogrupowane w pliki
+│       ├── users.py
+│       ├── cycles.py
+│       └── observations.py
+├── core/               # Konfiguracja i ustawienia globalne
+│   ├── config.py       # Parsowanie zmiennych środowiskowych (Pydantic BaseSettings)
+│   └── security.py     # JWT, hashowanie haseł
+├── db/                 # Połączenie z PostgreSQL
+│   ├── database.py     # Konfiguracja SQLAlchemy (Engine, Session)
+│   └── migrations/     # Folder dla Alembic (narzędzie do migracji)
+├── models/             # Warstwa Danych: Modele SQLAlchemy (Tabele w DB)
+│   ├── user.py
+│   ├── cycle.py
+│   └── observation.py
+├── schemas/            # DTO (Data Transfer Objects): Modele Pydantic
+│   ├── cycle.py        # Struktury wejściowe/wyjściowe (np. CycleCreate, CycleResponse)
+│   └── observation.py
+├── repositories/       # 3. Warstwa Dostępu do Danych (Data Access Layer)
+│   ├── base.py         # Opcjonalnie: Generyczne CRUDy
+│   ├── cycle_repo.py
+│   └── observation_repo.py
+├── services/           # 2. Warstwa Logiki Biznesowej (Business Logic Layer)
+│   ├── npr_rules.py    # Algorytmy i reguły NPR (np. metoda Rötzera)
+│   ├── cycle_service.py
+│   └── observation_service.py
+└── main.py             # Punkt startowy aplikacji (inicjalizacja FastAPI)

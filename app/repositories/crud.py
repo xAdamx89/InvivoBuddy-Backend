@@ -4,20 +4,20 @@ from dotenv import load_dotenv
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-import models, schemas, security
+import app.models.models as models, app.schemas.schemas as schemas, app.api.core.security as security
 from sqlalchemy import select, desc, insert
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from jose import jwt, JWTError  # lub od firmy jose: from jose import jwt, JWTError
-from database import get_db
-import schemas
-from models import TabelePomiarowe, Pomiary
+from app.db.database import get_db
+import app.schemas.schemas as schemas
+from app.models.models import TabelePomiarowe, Pomiary
 
 from datetime import datetime, timedelta, time
 
-from utils.utils import round_time_to_half_hour
+from app.utils.utils import round_time_to_half_hour
 
 load_dotenv()  # Ładuje zmienne środowiskowe z pliku .
 

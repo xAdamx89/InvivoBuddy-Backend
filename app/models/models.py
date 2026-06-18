@@ -2,9 +2,7 @@ from typing import List
 from sqlalchemy import String, Integer, Boolean, DateTime, ForeignKey, func, Time, Enum, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 from datetime import datetime
-from database import Base
-
-from models_enum import TypObjawuKrwi
+from app.db.database import Base
 
 class User(Base):
     __tablename__ = "users"
@@ -126,7 +124,7 @@ class Pomiary(Base):
     )
 
     tabele_pomiarowe: Mapped["TabelePomiarowe"] = relationship(
-        "tabele_pomiarowe",
+        "TabelePomiarowe",
         back_populates="pomiary"
     )
 

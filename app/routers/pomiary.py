@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy import text, select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
-import crud, schemas, database
+import app.repositories.crud as crud, app.schemas.schemas as schemas, app.db.database as database
 
-from schemas import stmt_data
+from app.schemas.schemas import stmt_data
 
-from crud import dodaj_pomiar, pobierz_liste_danych, dodaj_dane_testowe
+from app.repositories.crud import dodaj_pomiar, pobierz_liste_danych, dodaj_dane_testowe
 
-from models import TabelePomiarowe
+from app.models.models import TabelePomiarowe
 
 router = APIRouter(
     prefix="/pomiary",

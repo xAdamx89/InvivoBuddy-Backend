@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-import crud, schemas, database, security
+import app.repositories.crud as crud, app.schemas.schemas as schemas, app.db.database as database, app.api.core.security as security
 
 router = APIRouter(
     tags=["Uwierzytelnianie i rejestracja"]
@@ -15,7 +15,12 @@ async def register_user(user: schemas.ZadanieRejestracja, db: AsyncSession = Dep
             status_code=status.HTTP_400_BAD_REQUEST, 
             detail="Użytkownik o tej nazwie już istnieje"
         )
-    return await crud.create_user(db=db, user=user)
+    
+    resp = await crud.create_user(db=db, user=user)
+    return {
+        "status": "0",
+        "resp": "OK"
+    }
 
 @router.post("/login", response_model=schemas.OdpowiedzToken)
 async def login(
