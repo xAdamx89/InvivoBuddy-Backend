@@ -2,9 +2,7 @@ from typing import List, TYPE_CHECKING
 from sqlalchemy import String, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
-
-if TYPE_CHECKING:
-    from .base_class import Base
+from .base_class import Base
 
 
 class Poradnik(Base):

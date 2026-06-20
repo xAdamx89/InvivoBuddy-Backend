@@ -3,16 +3,14 @@ from typing import TYPE_CHECKING
 from sqlalchemy import String, Boolean, DateTime, ForeignKey, func, Time, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
-
-if TYPE_CHECKING:
-    from app.models.base_class import Base
+from .base_class import Base
 
 
 class Pomiar(Base):
     __tablename__ = "pomiary"
     # auto
     pomiar_id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    tabela_pomiarow_id: Mapped[int] = mapped_column(ForeignKey("tablica_pomiarow.tabela_pomiarowa_id"))
+    tabela_pomiarow_id: Mapped[int] = mapped_column(ForeignKey("tabele_pomiarowe.tabela_pomiarowa_id"))
     tabela_pomiarow: Mapped[int] = relationship(back_populates="")
 
     # Wylicza z creted_at

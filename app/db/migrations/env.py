@@ -9,6 +9,12 @@ from alembic import context
 # from app.models.pomiar import Base
 from app.models.base_class import Base
 
+from app.models.user import User
+from app.models.tabela_pomiarowa import TabelaPomiarowa
+from app.models.pomiar import Pomiar
+from app.models.poradnik import Poradnik
+
+
 load_dotenv()
 
 # this is the Alembic Config object, which provides

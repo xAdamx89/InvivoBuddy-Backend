@@ -3,10 +3,10 @@ from typing import List, TYPE_CHECKING
 from sqlalchemy import String, DateTime, ForeignKey, func, Time, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
+from .base_class import Base
 
 if TYPE_CHECKING:
     from .pomiar import Pomiar
-    from .base_class import Base
 
 
 class TabelaPomiarowa(Base):
