@@ -1,8 +1,11 @@
-from typing import List
+from typing import List, TYPE_CHECKING
 from sqlalchemy import String, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
-from app.db.database import Base
+
+if TYPE_CHECKING:
+    from .base_class import Base
+
 
 class Poradnik(Base):
     __tablename__ = "poradniki"

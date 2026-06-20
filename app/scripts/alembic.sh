@@ -3,8 +3,8 @@
 set -e
 
 if [ "$1" == "1" ]; then
-    # Plan budowy bazy danych - sprawdza różnice między modelem a bazą danych i generuje migrację
-    echo "Generuję nową migrację..."
+    # Plan budowy bazy danych - sprawdza różnice między modelem a bazą danych i generuje nowy plik migracji
+   echo "Generuję nową migrację..."
     alembic revision --autogenerate -m "Auto-migration $(date +%s)"
 elif [ "$1" == "2" ]; then
     # Wykonanie migracji
@@ -40,8 +40,9 @@ elif [ "$1" == "7" ]; then
 
 else
     echo "Argumenty:"
-    echo "1 - Plan budowy bazy danych - sprawdza różnice między modelem a bazą danych i generuje migrację"
-    echo "2 - Wykonanie migracji - Przy ponownym uruchomieniu bazy w RAM"
+    echo "1 - Sprawdza różnice między modelem a bazą danych i generuje nowy plik migracji"
+    echo "2 - Wykonanie migracji - Przy ponownym uruchomieniu bazy w RAM."
+    echo "    Alembic wchodzi do bazy danych, patrzy na plik migracji i sam wykonuje potrzebny kod SQL."
     echo "3 - wykonaj 1 + 2"
     echo "4 - Cofnięcie ostatniej zmiany"
     echo "5 - Sprawdź status migracji alembic"

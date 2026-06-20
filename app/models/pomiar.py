@@ -1,19 +1,19 @@
-from typing import List
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from sqlalchemy import String, Boolean, DateTime, ForeignKey, func, Time, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
-from app.db.database import Base
+
+if TYPE_CHECKING:
+    from app.models.base_class import Base
+
 
 class Pomiar(Base):
     __tablename__ = "pomiary"
     # auto
-    PomiarId: Mapped[int] = mapped_column(primary_key=True, index=True)
-
-    # KLUCZ OBCY: Wskazuje na konkretny rekord w tabeli_pomiaru
-    # Pobrane z bazy
-    tabele_pomiarowe_id: Mapped[int] = mapped_column(
-        ForeignKey("tabele_pomiarowe.TabelaPomiarowaId"), nullable=False
-    )
+    pomiar_id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    tabela_pomiarow_id: Mapped[int] = mapped_column(ForeignKey("tablica_pomiarow.tabela_pomiarowa_id"))
+    tabela_pomiarow: Mapped[int] = relationship(back_populates="")
 
     # Wylicza z creted_at
     data_pomiaru: Mapped[datetime] = mapped_column(
@@ -59,8 +59,4 @@ class Pomiar(Base):
         server_default=func.now()
     )
 
-    tabele_pomiarowe: Mapped["TabelaPomiarowa"] = relationship(
-        "TabelePomiarowe",
-        back_populates="pomiary"
-    )
 

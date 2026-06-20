@@ -1,16 +1,28 @@
-from typing import List
+from __future__ import annotations
+from typing import List, TYPE_CHECKING
 from sqlalchemy import String, DateTime, ForeignKey, func, Time, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
-from app.db.database import Base
+
+if TYPE_CHECKING:
+    from .pomiar import Pomiar
+    from .base_class import Base
+
 
 class TabelaPomiarowa(Base):
     __tablename__ = "tabele_pomiarowe"
 
-    TabelaPomiarowaId: Mapped[int] = mapped_column(primary_key=True, index=True)
+    tabela_pomiarowa_id: Mapped[int] = mapped_column(
+            primary_key=True, 
+            index=True
+        )
+    # Właściciel tabeli z pomiarami
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"))
+    owner: Mapped["TabelaPomiarowa"] = relationship(back_populates="tabela_pomiarowa_id")
+    # Pomiary w tablicy pomiarow
+    pomiary_id: Mapped[List["Pomiar"]] = relationship(back_populates="parent", cascade="all, delete")
 
-    owner_id: Mapped[int] = mapped_column(ForeignKey("users.UserId", ondelete="CASCADE"), nullable=False)
-    user_id_udostepnione: Mapped[int | None] = mapped_column(nullable=True)
+
 
     imie_i_nazwisko: Mapped[str] = mapped_column(String(100), nullable=True)
     wiek: Mapped[int] = mapped_column(nullable=True)
@@ -30,10 +42,4 @@ class TabelaPomiarowa(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now()
-    )
-
-    # RELACJE
-    owner: Mapped["user"] = relationship("User", back_populates="tabele")
-    pomiary: Mapped[List["Pomiar"]] = relationship(
-        "Pomiary", back_populates="tabele_pomiarowe", cascade="all, delete-orphan"
     )

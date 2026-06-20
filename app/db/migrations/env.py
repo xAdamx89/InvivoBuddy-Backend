@@ -2,15 +2,12 @@ from dotenv import load_dotenv
 import os
 
 from logging.config import fileConfig
-
-from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine
-
 from alembic import context
-
-from app.models.pomiar import Base
+# from app.models.pomiar import Base
+from app.models.base_class import Base
 
 load_dotenv()
 
@@ -66,7 +63,7 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    # 1. Pobierz URL (tak jak to robiłeś)
+    # 1. Pobierz URL
     app_mode = os.getenv("APP_MODE")
     db_url = os.environ.get("CONN_STR_DEV") if app_mode == 'DEV' else os.environ.get("CONN_STR_PROD")
     
