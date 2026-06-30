@@ -6,13 +6,13 @@ from sqlalchemy import pool
 import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine
 from alembic import context
-# from app.models.pomiar import Base
-from app.models.base_class import Base
+# from models.pomiar import Base
+from models.base_class import Base
 
-from app.models.user import User
-from app.models.tabela_pomiarowa import TabelaPomiarowa
-from app.models.pomiar import Pomiar
-from app.models.poradnik import Poradnik
+from models.user import User
+from models.tabela_pomiarowa import TabelaPomiarowa
+from models.pomiar import Pomiar
+from models.poradnik import Poradnik
 
 
 load_dotenv()

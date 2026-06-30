@@ -6,6 +6,8 @@ from passlib.context import CryptContext
 from dotenv import load_dotenv
 import os
 
+load_dotenv()
+
 # Zmień ten klucz na bardzo długi i losowy string!
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")

@@ -4,20 +4,20 @@ from dotenv import load_dotenv
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-import app.models.pomiar as pomiar, app.schemas.schemas as schemas, app.core.security as security
+import models.pomiar as pomiar, schemas.schemas as schemas, core.security as security
 from sqlalchemy import select, desc, insert
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
-from jose import jwt, JWTError  # lub od firmy jose: from jose import jwt, JWTError
-from app.db.database import get_db
-import app.schemas.schemas as schemas
-from app.models.pomiar import TabelePomiarowe, Pomiary
+from jose import jwt
+from db.database import get_db
+import schemas.schemas as schemas
+from models.tabela_pomiarowa import TabelaPomiarowa
 
 from datetime import datetime, timedelta, time
 
-from app.utils.utils import round_time_to_half_hour
+from utils.utils import round_time_to_half_hour
 
 load_dotenv()  # Ładuje zmienne środowiskowe z pliku .
 
@@ -30,9 +30,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 async def najmlodsza_tabelepomiarowe(db: AsyncSession, user_id):
     """Funkcja do pobrania najmłodszej TabelaPomiarowa."""
     stmt = (
-        select(TabelePomiarowe)
-        .where(TabelePomiarowe.owner_id == user_id)
-        .order_by(desc(TabelePomiarowe.created_at))
+        select(TabelaPomiarowa)
+        .where(TabelaPomiarowa.owner_id == user_id)
+        .order_by(desc(TabelaPomiarowa.created_at))
         .limit(1)
     )
     resp = await db.execute(stmt)
@@ -47,7 +47,7 @@ async def utworz_tabelepomiarowe_dodaj_pomiar(db: AsyncSession, db_pomiar, user_
     zaokraglony_dt = round_time_to_half_hour(dt_from_request)
 
     stmt = (
-        insert(TabelePomiarowe)
+        insert(TabelaPomiarowa)
         .values(
             owner_id = user_id,
             godzina_pomiaru = zaokraglony_dt,
@@ -90,7 +90,7 @@ async def dodaj_pomiar_crud(db: AsyncSession, db_pomiar, user_id, dane_najmlodsz
 async def get_current_user(
     token: str = Depends(oauth2_scheme), 
     db: AsyncSession = Depends(get_db)
-) -> pomiar.User:
+):
     
     # Tworzymy generyczny błąd, który wyrzucimy, jeśli token będzie zły
     credentials_exception = HTTPException(
@@ -207,7 +207,7 @@ async def dodaj_dane_testowe(db: AsyncSession, owner_id: int = 1):
     try:
         for t_id in target_ids:
             # 1. Tworzenie tabeli z konkretnym ID
-            nowa_tabela = TabelePomiarowe(
+            nowa_tabela = TabelaPomiarowa(
                 TabelaPomiarowaId=t_id,  # Jawne ID
                 owner_id=owner_id,
                 koniec_cyklu=False,

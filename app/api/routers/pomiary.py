@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy import text, select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
-import app.repositories.crud as crud, app.schemas.schemas as schemas, app.db.database as database
+import repositories.crud as crud, schemas.schemas as schemas, db.database as database
 
-from app.schemas.schemas import stmt_data
+from schemas.schemas import stmt_data
 
-from app.repositories.crud import dodaj_pomiar, pobierz_liste_danych, dodaj_dane_testowe
+from repositories.crud import dodaj_pomiar, pobierz_liste_danych, dodaj_dane_testowe
 
-from app.models.pomiar import TabelePomiarowe
+from models.tabela_pomiarowa import TabelaPomiarowa
 
 router = APIRouter(
     prefix="/pomiary",
@@ -25,8 +25,8 @@ async def pobierz_tablice_pomiarow(
     current_user: schemas.OdpowiedzJa = Depends(crud.get_current_user)
 ):
     stmt = (
-        select(TabelePomiarowe)
-        .where(TabelePomiarowe.owner_id == current_user.id)
+        select(TabelaPomiarowa)
+        .where(TabelaPomiarowa.owner_id == current_user.id)
         )
     res = db.execute(stmt)
     #dane = res.

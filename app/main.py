@@ -5,9 +5,9 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi.exceptions import RequestValidationError, ResponseValidationError
 
 # Importujemy nasze nowe routery
-from app.api.routers import pomiary
-from app.api.routers import users
-from app.api.routers import auth
+from api.routers import pomiary
+from api.routers import users
+from api.routers import auth
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
